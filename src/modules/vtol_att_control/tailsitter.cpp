@@ -44,7 +44,14 @@
 
 #include <uORB/topics/landing_gear.h>
 
-#define PITCH_TRANSITION_FRONT_P1 -1.1f	// pitch angle to switch to TRANSITION_P2
+/* @Shubhanshu: include ref trajectory files*/
+// #include "transition_fw_traj/ref_traj.cpp"
+// #include "transition_fw_traj/TransitionControl.hpp"
+#include "transition_fw_traj/NDI_controller.hpp"
+#include <iostream>
+/*******************************************/
+
+#define PITCH_TRANSITION_FRONT_P1 -1.5f	// pitch angle to switch to TRANSITION_P2
 #define PITCH_TRANSITION_BACK -0.25f	// pitch angle to switch to MC
 
 using namespace matrix;
@@ -125,6 +132,12 @@ void Tailsitter::update_vtol_state()
 			// initialise a front transition
 			_vtol_schedule.flight_mode = vtol_mode::TRANSITION_FRONT_P1;
 			_vtol_schedule.transition_start = hrt_absolute_time();
+			/* @Shubhanshu: Zero offset correction for inertial position during transition*/
+			_vtol_schedule.pos_transition_start[0] = _local_pos->x;
+			_vtol_schedule.pos_transition_start[1] = _local_pos->y;
+			_vtol_schedule.pos_transition_start[2] = _local_pos->z;
+			std::cout << " Offset data during transition: " << _vtol_schedule.pos_transition_start[0] << _vtol_schedule.pos_transition_start[1] << _vtol_schedule.pos_transition_start[2] << std::endl;
+			/******************************************************************************/
 			break;
 
 		case vtol_mode::FW_MODE:
@@ -243,13 +256,44 @@ void Tailsitter::update_transition_state()
 	cos_tilt = cos_tilt < -1.0f ? -1.0f : cos_tilt;
 	const float tilt = acosf(cos_tilt);
 
+	double net_thrust = -0.6;
+	float ThetaRef = 0;
+	double delTheta = 0;
+	std::vector<double> result;
+	std::vector<double> result0;
+
 	if (_vtol_schedule.flight_mode == vtol_mode::TRANSITION_FRONT_P1) {
 
 		const float trans_pitch_rate = M_PI_2_F / _params->front_trans_duration;
 
-		if (tilt < M_PI_2_F - _params_tailsitter.fw_pitch_sp_offset) {
+		if (-Eulerf(Quatf(_v_att->q)).theta() < M_PI_2_F - _params_tailsitter.fw_pitch_sp_offset) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
 						       time_since_trans_start * trans_pitch_rate)) * _q_trans_start;
+
+			/* @Shubhanshu: give thrust and pitch setpoint from trajectory*/
+			// net_thrust = outer_loop_cont(_local_pos->x,_local_pos->y,_local_pos->z,_local_pos->vx,_local_pos->vy,_local_pos->vz,_local_pos->z_deriv,Eulerf(Quatf(_v_att->q)).theta(), _vtol_schedule.pos_transition_start, time_since_trans_start,_params->front_trans_duration);
+			// result = NDI_cont(time_since_trans_start,_params->front_trans_duration,_vtol_schedule.pos_transition_start, Eulerf(_q_trans_start).psi());
+			// net_thrust = result[0];
+			// delTheta = result[1];
+			// ThetaRef = pitch_sp_trans_f(time_since_trans_start,_params->front_trans_duration);
+			// // _q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
+			// // 			       -Eulerf(Quatf(_v_att->q)).theta()+(float)delTheta)) * _q_trans_start;
+			// _q_trans_sp = Eulerf(0.0f, Eulerf(Quatf(_v_att->q)).theta()-(float)delTheta, Eulerf(_q_trans_start).psi());
+
+			// // _q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
+			// // 			       (float)delTheta)) * _q_trans_start;
+			// // _q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
+			// // 			       ThetaRef)) * _q_trans_start;
+			(void)ThetaRef;
+			(void)delTheta;
+
+			// /* NOC Controller*/
+			result0 = OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
+			net_thrust = result0[0];
+			_q_trans_sp = Eulerf(0.0f, -result0[1], Eulerf(_q_trans_start).psi());
+
+			std::cout << " " << net_thrust << " " << _v_att_sp->thrust_body[2] << std::endl;
+			/***************************************************/
 		}
 
 		// check front transition timeout
@@ -275,6 +319,16 @@ void Tailsitter::update_transition_state()
 	}
 
 	_v_att_sp->thrust_body[2] = _mc_virtual_att_sp->thrust_body[2];
+
+	/* @Shubhanshu : Trying to modify the vehicle's thrust during transition */
+	if (_vtol_schedule.flight_mode == vtol_mode::TRANSITION_FRONT_P1) {
+		if (-Eulerf(Quatf(_v_att->q)).theta() < M_PI_2_F - _params_tailsitter.fw_pitch_sp_offset) {
+			(void) net_thrust;
+			_v_att_sp->thrust_body[2] = net_thrust;
+			// std::cout << "," << _v_att_sp->thrust_body[2] << std::endl;
+		}
+	}
+	/* ********************************************************************** */
 
 	_mc_roll_weight = 1.0f;
 	_mc_pitch_weight = 1.0f;
@@ -372,6 +426,10 @@ void Tailsitter::fill_actuator_outputs()
 	}
 
 	if (_params->elevons_mc_lock && _vtol_schedule.flight_mode == vtol_mode::MC_MODE) {
+		fw_out[actuator_controls_s::INDEX_ROLL]  = 0;
+		fw_out[actuator_controls_s::INDEX_PITCH] = 0;
+
+	} else if (_params->elevons_mc_lock && _vtol_schedule.flight_mode == vtol_mode::TRANSITION_FRONT_P1) {
 		fw_out[actuator_controls_s::INDEX_ROLL]  = 0;
 		fw_out[actuator_controls_s::INDEX_PITCH] = 0;
 

@@ -49,20 +49,6 @@ else
 	verbose=""
 fi
 
-# Disable follow mode
-if [[ "$PX4_NO_FOLLOW_MODE" != "1" ]]; then
-    follow_mode="--gui-client-plugin libgazebo_user_camera_plugin.so"
-else
-    follow_mode=""
-fi
-
-# To use gazebo_ros ROS2 plugins
-if [[ -n "$ROS_VERSION" ]] && [ "$ROS_VERSION" == "2" ]; then
-	ros_args="-s libgazebo_ros_init.so -s libgazebo_ros_factory.so"
-else
-	ros_args=""
-fi
-
 if [ "$program" == "jmavsim" ]; then
 	jmavsim_pid=`ps aux | grep java | grep "\-jar jmavsim_run.jar" | awk '{ print $2 }'`
 	if [ -n "$jmavsim_pid" ]; then
@@ -97,8 +83,6 @@ shift 7
 for file in "$@"; do
 	cp "$file" $rootfs/
 done
-
-export PX4_SIM_MODEL=${model}
 
 SIM_PID=0
 
@@ -140,7 +124,7 @@ elif [ "$program" == "gazebo" ] && [ ! -n "$no_sim" ]; then
 				world_path="$PX4_SITL_WORLD"
 			fi
 		fi
-		gzserver $verbose $world_path $ros_args &
+		gzserver $verbose $world_path &
 		SIM_PID=$!
 
 		# Check all paths in ${GAZEBO_MODEL_PATH} for specified model
@@ -177,22 +161,13 @@ elif [ "$program" == "gazebo" ] && [ ! -n "$no_sim" ]; then
 			# gzserver needs to be running to avoid a race. Since the launch
 			# is putting it into the background we need to avoid it by backing off
 			sleep 3
-			nice -n 20 gzclient --verbose $follow_mode &
+			nice -n 20 gzclient --verbose &
 			GUI_PID=$!
 		fi
 	else
 		echo "You need to have gazebo simulator installed!"
 		exit 1
 	fi
-elif [ "$program" == "ignition" ] && [ -z "$no_sim" ]; then
-	echo "Ignition Gazebo"
-	if [[ -n "$HEADLESS" ]]; then
-		ignition_headless="-s"
-	else
-		ignition_headless=""
-	fi
-	source "$src_path/Tools/setup_ignition.bash" "${src_path}" "${build_path}"
-	ign gazebo --force-version 5 ${verbose} ${ignition_headless} -r "${src_path}/Tools/simulation-ignition/worlds/${model}.world"&
 elif [ "$program" == "flightgear" ] && [ -z "$no_sim" ]; then
 	echo "FG setup"
 	cd "${src_path}/Tools/flightgear_bridge/"
@@ -228,6 +203,9 @@ else
 fi
 
 echo SITL COMMAND: $sitl_command
+
+export PX4_SIM_MODEL=${model}
+
 
 if [ "$debugger" == "lldb" ]; then
 	eval lldb -- $sitl_command

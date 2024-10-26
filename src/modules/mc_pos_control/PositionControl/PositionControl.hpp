@@ -133,6 +133,12 @@ public:
 	void updateHoverThrust(const float hover_thrust_new);
 
 	/**
+	 * @Shubhanshu
+	 * Return thr hover thrust which is a private variable
+	*/
+	float getHoverThrust() { return _hover_thrust; };
+
+	/**
 	 * Pass the current vehicle state to the controller
 	 * @param PositionControlStates structure
 	 */

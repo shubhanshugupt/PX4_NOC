@@ -1,0 +1,59 @@
+[0/4] Performing build step for 'sitl_gazebo'
+ninja: no work to do.
+[2/4] No install step for 'sitl_gazebo'
+[3/4] Completed 'sitl_gazebo'
+[3/4] cd /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/tmp && /home/shubh/testing_orig/PX4-Autopilot/Tools/sitl_run.sh /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/bin/px4 none gazebo biplane none /home/shubh/testing_orig/PX4-Autopilot /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default
+SITL ARGS
+sitl_bin: /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/bin/px4
+debugger: none
+program: gazebo
+model: biplane
+world: none
+src_path: /home/shubh/testing_orig/PX4-Autopilot
+build_path: /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default
+GAZEBO_PLUGIN_PATH :/home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/build_gazebo
+GAZEBO_MODEL_PATH :/home/shubh/testing_orig/PX4-Autopilot/Tools/sitl_gazebo/models
+LD_LIBRARY_PATH :/home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/build_gazebo
+empty world, setting empty.world as default
+Using: /home/shubh/testing_orig/PX4-Autopilot/Tools/sitl_gazebo/models/biplane/biplane.sdf
+SITL COMMAND: "/home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/bin/px4" "/home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default"/etc -s etc/init.d-posix/rcS -t "/home/shubh/testing_orig/PX4-Autopilot"/test_data
+Creating symlink /home/shubh/testing_orig/PX4-Autopilot/build/px4_sitl_default/etc -> /home/shubh/testing_orig/PX4-Autopilot/b
+
+______  __   __    ___ 
+| ___ \ \ \ / /   /   |
+| |_/ /  \ V /   / /| |
+|  __/   /   \  / /_| |
+| |     / /^\ \ \___  |
+\_|     \/   \/     |_/
+
+px4 starting.
+
+INFO  [px4] Calling startup script: /bin/sh etc/init.d-posix/rcS 0
+INFO  [init] found model autostart file as SYS_AUTOSTART=1810
+INFO  [param] selected parameter default file eeprom/parameters_1810
+INFO  [parameters] BSON document size 562 bytes, decoded 562 bytes (INT32:15, FLOAT:12)
+[param] Loaded: eeprom/parameters_1810
+INFO  [dataman] data manager file './dataman' size is 7866640 bytes
+PX4 SIM HOST: localhost
+INFO  [simulator] Waiting for simulator to accept connection on TCP port 4560
+INFO  [simulator] Simulator connected on TCP port 4560.
+INFO  [commander] LED: open /dev/led0 failed (22)
+INFO  [init] Mixer: etc/mixers-sitl/quad_x_vtol.main.mix on /dev/pwm_output0
+INFO  [mavlink] mode: Normal, data rate: 4000000 B/s on udp port 18570 remote port 14550
+INFO  [mavlink] mode: Onboard, data rate: 4000000 B/s on udp port 14580 remote port 14540
+INFO  [mavlink] mode: Onboard, data rate: 4000 B/s on udp port 14280 remote port 14030
+INFO  [mavlink] mode: Gimbal, data rate: 400000 B/s on udp port 13030 remote port 13280
+INFO  [logger] logger started (mode=all)
+INFO  [logger] Start file log (type: full)
+INFO  [logger] [logger] ./log/2024-07-26/13_10_23.ulg	
+INFO  [logger] Opened full log file: ./log/2024-07-26/13_10_23.ulg
+INFO  [mavlink] MAVLink only on localhost (set param MAV_{i}_BROADCAST = 1 to enable network)
+INFO  [mavlink] MAVLink only on localhost (set param MAV_{i}_BROADCAST = 1 to enable network)
+INFO  [px4] Startup script returned successfully
+pxh> INFO  [mavlink] partner IP: 127.0.0.1
+INFO  [tone_alarm] home set
+INFO  [tone_alarm] notify negative
+[2Kpxh> commander takeoff[2Kpxh> commander takeoff[2Kpxh> [2Kpxh> commander takeoff[2Kpxh> [2Kpxh> commander takeoff[2Kpxh> 
+PX4 Exiting...
+[2Kpxh> Exiting NOW.
+ninja: build stopped: interrupted by user.

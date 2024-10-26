@@ -190,7 +190,7 @@ PARAM_DEFINE_FLOAT(VT_ARSP_BLEND, 8.0f);
  * @decimal 2
  * @group VTOL Attitude Control
  */
-PARAM_DEFINE_FLOAT(VT_ARSP_TRANS, 10.0f);
+PARAM_DEFINE_FLOAT(VT_ARSP_TRANS, 14.0f);
 
 /**
  * Front transition timeout

@@ -81,6 +81,7 @@ private:
 	struct {
 		vtol_mode flight_mode;			/**< vtol flight mode, defined by enum vtol_mode */
 		hrt_abstime transition_start;	/**< absoulte time at which front transition started */
+		float pos_transition_start[3] {0,0,0};		/* @Shubhanshu : Offset for transition start point*/
 	} _vtol_schedule;
 
 	matrix::Quatf _q_trans_start;

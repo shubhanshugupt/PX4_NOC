@@ -10,6 +10,7 @@
 #pragma once
 
 #include "math.hpp"
+#include <iostream>
 
 namespace matrix
 {
@@ -24,6 +25,7 @@ template<typename Type, size_t M, size_t N>
 bool geninv(const Matrix<Type, M, N> &G, Matrix<Type, N, M> &res)
 {
 	size_t rank;
+	// std::cout << "Size: (" << M << "," << N << ")" << std::endl;
 
 	if (M <= N) {
 		SquareMatrix<Type, M> A = G * G.transpose();

@@ -51,6 +51,10 @@
 #include <systemlib/mavlink_log.h>
 #include <uORB/Publication.hpp>
 
+/* @Shubhanshu: print statements*/
+#include <iostream>
+/*******************************************/
+
 using namespace matrix;
 using namespace time_literals;
 
@@ -515,6 +519,10 @@ VtolAttitudeControl::Run()
 
 			break;
 		}
+
+		/* @Shubhanshu: Read attitude during flight*/
+		// std::cout << "Roll: " << Eulerf(Quatf(_v_att.q)).phi()*180/3.14f << " Pitch: " << Eulerf(Quatf(_v_att.q)).theta()*180/3.14f << " Yaw: " << Eulerf(Quatf(_v_att.q)).psi()*180/3.14f << std::endl;
+		/*******************************************/
 
 		_vtol_type->fill_actuator_outputs();
 		_actuators_0_pub.publish(_actuators_out_0);

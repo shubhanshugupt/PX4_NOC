@@ -41,3 +41,6 @@ px4_add_module(
 		standard.cpp
 	)
 
+# Add Eigen include directory
+include_directories(${CMAKE_SOURCE_DIR}/src/lib/Eigen)
+
