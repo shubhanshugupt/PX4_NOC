@@ -63,6 +63,26 @@ float b_D_mat[4][4] = {
 Vector3f term_weight(20,100,100);
 Matrix3f b_Qf = diag(term_weight);
 
+// Check the trajectory feasibility by trying to track the pitch trajectory
+float pitch_sp_trans_b(float t, float trans_duration){
+
+	float dt = trans_duration/15;
+	int index = static_cast<int> (t/dt);
+	float pitch_des;
+
+	if (index < 0){
+		pitch_des = b_control[1][0];
+	} else if (index > 15){
+		pitch_des = b_control[1][15];
+	} else {
+		float t_low = index * dt;
+		float t_high = (index + 1) * dt;
+		pitch_des = b_control[1][index] + ( (b_control[1][index+1] - b_control[1][index]) / (t_high - t_low) ) * (t - t_low);
+	}
+	return pitch_des;
+
+}
+
 std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 
 	_vehicle_attitude_sub.update(&_v_att);
@@ -363,12 +383,12 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 		del_Lmbd(2) = Ze(3*M-1,0);
 
 		// calculate gradient of f wrt u
-		matrix::Matrix<double, 3, 2> f_u;
+		Matrix<double, 3, 2> f_u;
 		for (int a=0; a<2; a++) {
-			matrix::Vector2f desUper = desU;
+			Vector2f desUper = desU;
 			desUper(a) = desU(a) + pert;
-			matrix::Vector3d dXper = dynamics2(desX, desUper);
-			matrix::Vector3d dX = dynamics2(desX, desU);
+			Vector3d dXper = dynamics2(desX, desUper);
+			Vector3d dX = dynamics2(desX, desU);
 
 			for (int i=0; i<3; i++) {
 				f_u(i,a) = ( dXper(i) - dX(i) ) / pert2;
@@ -376,13 +396,13 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 		}
 
 		// Calculation of Hessian of Hamilton
-		matrix::Matrix<double, 2, 3> Hux;
+		Matrix<double, 2, 3> Hux;
 		for (int a=0; a<2; a++) {
-			matrix::Vector2f desUper = desU;
+			Vector2f desUper = desU;
 			desUper(a) = desU(a) + pert;
 
 			for (int b=0; b<3; b++) {
-				matrix::Vector3f desXper = desX;
+				Vector3f desXper = desX;
 				desXper(b) = desX(b) + pert;
 
 				Hux(a,b) = ( hamilton2(desXper, desUper, des_lamd)
@@ -392,17 +412,17 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 			}
 		}
 
-		matrix::Matrix<double, 2, 2> Huu;
+		Matrix<double, 2, 2> Huu;
 		for (int a=0; a<2; a++) {
-			matrix::Vector2f desU1 = desU;
-			matrix::Vector2f desU0 = desU;
+			Vector2f desU1 = desU;
+			Vector2f desU0 = desU;
 			desU1(a) = desU(a) + pert;
 
 			for (int b=0; b<2; b++) {
-				matrix::Vector2f desU11 = desU1;
-				matrix::Vector2f desU10 = desU1;
-				matrix::Vector2f desU01 = desU0;
-				matrix::Vector2f desU00 = desU0;
+				Vector2f desU11 = desU1;
+				Vector2f desU10 = desU1;
+				Vector2f desU01 = desU0;
+				Vector2f desU00 = desU0;
 
 				desU11(b) = desU1(b) + pert;
 				desU01(b) = desU0(b) + pert;
@@ -422,23 +442,23 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 		// Compute the pseudo-inverse of the identity matrix
 		Eigen::MatrixXd invHuu_temp = pseudoInverse(Huu_temp);
 
-		matrix::Matrix<double, 2, 2> invHuu;
+		Matrix<double, 2, 2> invHuu;
 		invHuu(0,0) = invHuu_temp(0,0);
 		invHuu(0,1) = invHuu_temp(0,1);
 		invHuu(1,0) = invHuu_temp(1,0);
 		invHuu(1,1) = invHuu_temp(1,1);
 
-		matrix::Vector2d delU = - invHuu * ( Hux * delX + f_u.transpose() * del_Lmbd);
+		Vector2d delU = - invHuu * ( Hux * delX + f_u.transpose() * del_Lmbd);
 
-		matrix::Vector2f newU;
+		Vector2f newU;
 		newU(0) = desU(0) + static_cast<float>(delU(0));
 		newU(1) = desU(1) + static_cast<float>(delU(1));
 
 		T_sp = newU(0);
 		Theta_sp = newU(1);
 
-		std::cout << time << " " << _local_pos.y << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2)
-		 << " " << Theta_sp << " " << pitch;
+		// std::cout << time << " " << _local_pos.y << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2)
+		//  << " " << Theta_sp << " " << pitch;
 
 	}
 
@@ -453,6 +473,6 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 
 	std::vector<double> result({-input,Theta_sp});
 	(void) pitch;
-	// std::cout << "Code is Running" << std::endl;
+	std::cout << "Code is Running" << result[0] << " " << result[1] << std::endl;
 	return result;
 }

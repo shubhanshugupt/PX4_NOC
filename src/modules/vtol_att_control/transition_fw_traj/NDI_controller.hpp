@@ -753,8 +753,8 @@ std::vector<double> OptimalControl(float time,  float pos_0[3]){
 		T_sp = newU(0);
 		Theta_sp = newU(1);
 
-		std::cout << time << " " << _local_pos.y << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2)
-		 << " " << Theta_sp << " " << pitch;
+		// std::cout << time << " " << _local_pos.y << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2)
+		//  << " " << Theta_sp << " " << pitch;
 
 	}
 

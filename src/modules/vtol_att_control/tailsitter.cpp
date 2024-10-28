@@ -52,7 +52,7 @@
 #include <iostream>
 /*******************************************/
 
-#define PITCH_TRANSITION_FRONT_P1 -1.5f	// pitch angle to switch to TRANSITION_P2
+#define PITCH_TRANSITION_FRONT_P1 -1.3f	// pitch angle to switch to TRANSITION_P2
 #define PITCH_TRANSITION_BACK -0.25f	// pitch angle to switch to MC
 
 using namespace matrix;
@@ -266,7 +266,6 @@ void Tailsitter::update_transition_state()
 	if (_vtol_schedule.flight_mode == vtol_mode::TRANSITION_FRONT_P1) {
 
 		const float trans_pitch_rate = M_PI_2_F / _params->front_trans_duration;
-		result0 = b_OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
 
 		if (-Eulerf(Quatf(_v_att->q)).theta() < M_PI_2_F - _params_tailsitter.fw_pitch_sp_offset) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
@@ -294,7 +293,7 @@ void Tailsitter::update_transition_state()
 			net_thrust = result0[0];
 			_q_trans_sp = Eulerf(0.0f, -result0[1], Eulerf(_q_trans_start).psi());
 
-			std::cout << " " << net_thrust << " " << _v_att_sp->thrust_body[2] << std::endl;
+			// std::cout << " " << net_thrust << " " << _v_att_sp->thrust_body[2] << std::endl;
 			/***************************************************/
 		}
 
@@ -317,6 +316,11 @@ void Tailsitter::update_transition_state()
 		if (tilt > 0.01f) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
 						       time_since_trans_start * trans_pitch_rate)) * _q_trans_start;
+			std::cout << "PX4 data:" << Eulerf(_q_trans_sp).phi() << " " << Eulerf(_q_trans_sp).theta() << " " << Eulerf(_q_trans_sp).psi() << std::endl;
+			ThetaRef = pitch_sp_trans_b(time_since_trans_start,3.5f);
+			_q_trans_sp = Eulerf(0.0f, -ThetaRef, Eulerf(_q_trans_start).psi());
+
+			std::cout << "BackT Data:" << ThetaRef << std::endl;
 		}
 	}
 
