@@ -312,7 +312,7 @@ std::vector<double> OptimalControl(float time,  float pos_0[3]){
 	float dt = time_f/15;
 	int index = static_cast<int>(time/dt);
 
-	// define setpoint velocities and accelerationa at current 'time'
+	// define setpoint state, costate and controls at current 'time'
 	float z_sp, vy_sp, vz_sp;
 	float lam0, lam1, lam2;
 	float T_sp, Theta_sp;

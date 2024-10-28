@@ -48,6 +48,7 @@
 // #include "transition_fw_traj/ref_traj.cpp"
 // #include "transition_fw_traj/TransitionControl.hpp"
 #include "transition_fw_traj/NDI_controller.hpp"
+#include "transition_fw_traj/BackNOC.hpp"
 #include <iostream>
 /*******************************************/
 
@@ -265,6 +266,7 @@ void Tailsitter::update_transition_state()
 	if (_vtol_schedule.flight_mode == vtol_mode::TRANSITION_FRONT_P1) {
 
 		const float trans_pitch_rate = M_PI_2_F / _params->front_trans_duration;
+		result0 = b_OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
 
 		if (-Eulerf(Quatf(_v_att->q)).theta() < M_PI_2_F - _params_tailsitter.fw_pitch_sp_offset) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
