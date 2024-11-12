@@ -109,12 +109,23 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 	Theta_sp = b_control[1][index] + ( (b_control[1][index+1] - b_control[1][index]) / (t_high - t_low) ) * (time - t_low);
 
 	float z = _local_pos.z - pos_0[2];
+	float vx = _local_pos.vx;
 	float vy = _local_pos.vy;
 	float vz = _local_pos.vz;
 	Quatf quatern(_v_att.q);
 	float pitch = Eulerf(quatern).theta();
+	float yaw  = Eulerf(quatern).psi();
 	const Vector3f velI(0,vy,vz);  // Inertial velocity
 	Vector3f velB = quatern.rotateVectorInverse(velI); // velocity in body frame
+
+	// Rotate the inertial velocity along the heading of vehicle
+	Quatf q_heading = Eulerf(0.0f, 0.0f, yaw);
+	Vector3f vI(vx,vy,vz);
+	Vector3f vH = q_heading.rotateVectorInverse(vI);
+	(void) vH;
+
+	// std::cout << "vI: " << vx << " " << vy << " " << vz << std::endl;
+	// std::cout << "vH: " << vH(0) << " " << vH(1) << " " << vH(2) << std::endl;
 
 	// Define setpoint quantities
 	Vector3f desX(z_sp,vy_sp,vz_sp);
@@ -457,8 +468,7 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 		T_sp = newU(0);
 		Theta_sp = newU(1);
 
-		// std::cout << time << " " << _local_pos.y << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2)
-		//  << " " << Theta_sp << " " << pitch;
+
 
 	}
 
@@ -470,9 +480,14 @@ std::vector<double> b_OptimalControl(float time,  float pos_0[3]){
 	float rpm = sqrt(thrust/mC);
 	// std::cout << "Calculated Thrust and motor velocity is: " << thrust0 << "," << rpm << std::endl;
 	double input = rpm/1000;
+	std::cout <<
+	//  velB(2) << " " << scalar << " " <<
+	time << " " << desX(0) << " " << desX(1) << " " << desX(2) << " " << currX(0) << " " << currX(1) << " " << currX(2) << " " <<
+	desU(0) << " " << desU(1) << " " << T_sp << " " << Theta_sp << " " << pitch
+	<< std::endl;
 
 	std::vector<double> result({-input,Theta_sp});
 	(void) pitch;
-	std::cout << "Code is Running" << result[0] << " " << result[1] << std::endl;
+	// std::cout << "Code is Running" << result[0] << " " << result[1] << std::endl;
 	return result;
 }

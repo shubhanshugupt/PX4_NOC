@@ -108,6 +108,12 @@ void Tailsitter::update_vtol_state()
 		case vtol_mode::FW_MODE:
 			_vtol_schedule.flight_mode = vtol_mode::TRANSITION_BACK;
 			_vtol_schedule.transition_start = hrt_absolute_time();
+			/* @Shubhanshu: Zero offset correction for inertial position during transition*/
+			_vtol_schedule.pos_transition_start[0] = _local_pos->x;
+			_vtol_schedule.pos_transition_start[1] = _local_pos->y;
+			_vtol_schedule.pos_transition_start[2] = _local_pos->z;
+			std::cout << "Offset data during BW transition: " << " " << _vtol_schedule.transition_start * 1e-6f << " " <<  _vtol_schedule.pos_transition_start[0] << " " << _vtol_schedule.pos_transition_start[1] << " " << _vtol_schedule.pos_transition_start[2] << std::endl;
+			/******************************************************************************/
 			break;
 
 		case vtol_mode::TRANSITION_FRONT_P1:
@@ -137,7 +143,7 @@ void Tailsitter::update_vtol_state()
 			_vtol_schedule.pos_transition_start[0] = _local_pos->x;
 			_vtol_schedule.pos_transition_start[1] = _local_pos->y;
 			_vtol_schedule.pos_transition_start[2] = _local_pos->z;
-			std::cout << " Offset data during transition: " << _vtol_schedule.pos_transition_start[0] << _vtol_schedule.pos_transition_start[1] << _vtol_schedule.pos_transition_start[2] << std::endl;
+			std::cout << " Offset data during FW transition: " << " " << _vtol_schedule.transition_start * 1e-6f << " " <<  _vtol_schedule.pos_transition_start[0] << " " << _vtol_schedule.pos_transition_start[1] << " " << _vtol_schedule.pos_transition_start[2] << std::endl;
 			/******************************************************************************/
 			break;
 
@@ -289,6 +295,7 @@ void Tailsitter::update_transition_state()
 			(void)delTheta;
 
 			// /* NOC Controller*/
+			// result0 = b_OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
 			result0 = OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
 			net_thrust = result0[0];
 			_q_trans_sp = Eulerf(0.0f, -result0[1], Eulerf(_q_trans_start).psi());
@@ -316,11 +323,15 @@ void Tailsitter::update_transition_state()
 		if (tilt > 0.01f) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
 						       time_since_trans_start * trans_pitch_rate)) * _q_trans_start;
-			std::cout << "PX4 data:" << Eulerf(_q_trans_sp).phi() << " " << Eulerf(_q_trans_sp).theta() << " " << Eulerf(_q_trans_sp).psi() << std::endl;
+			// std::cout << "PX4 data:" << Eulerf(_q_trans_sp).phi() << " " << Eulerf(_q_trans_sp).theta() << " " << Eulerf(_q_trans_sp).psi() << std::endl;
 			ThetaRef = pitch_sp_trans_b(time_since_trans_start,3.5f);
 			_q_trans_sp = Eulerf(0.0f, -ThetaRef, Eulerf(_q_trans_start).psi());
 
-			std::cout << "BackT Data:" << ThetaRef << std::endl;
+			// std::cout << "BackT Data:" << ThetaRef << std::endl;
+			result0 = b_OptimalControl(time_since_trans_start, _vtol_schedule.pos_transition_start);
+			_q_trans_sp = Eulerf(0.0f, -result0[1], Eulerf(_q_trans_start).psi());
+			net_thrust = result0[0];
+			// std::cout << "Controller O/P " << result0[0] << " " << result0[1] << std:: endl;
 		}
 	}
 
@@ -333,7 +344,15 @@ void Tailsitter::update_transition_state()
 			_v_att_sp->thrust_body[2] = net_thrust;
 			// std::cout << "," << _v_att_sp->thrust_body[2] << std::endl;
 		}
+	} else if (_vtol_schedule.flight_mode == vtol_mode::TRANSITION_BACK) {
+		if (tilt > 0.01f) {
+			_v_att_sp->thrust_body[2] = net_thrust;
+			// std::cout << "Actual Command " << _v_att_sp->thrust_body[2] << " " << -Eulerf(Quatf(_v_att_sp->q_d)).theta() << std::endl;
+
+		}
 	}
+
+
 	/* ********************************************************************** */
 
 	_mc_roll_weight = 1.0f;
