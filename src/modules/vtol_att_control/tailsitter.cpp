@@ -53,7 +53,7 @@
 /*******************************************/
 
 #define PITCH_TRANSITION_FRONT_P1 -1.3f	// pitch angle to switch to TRANSITION_P2
-#define PITCH_TRANSITION_BACK -0.25f	// pitch angle to switch to MC
+#define PITCH_TRANSITION_BACK 0.25f	// pitch angle to switch to MC
 
 using namespace matrix;
 
@@ -320,7 +320,9 @@ void Tailsitter::update_transition_state()
 			_flag_idle_mc = set_idle_mc();
 		}
 
-		if (tilt > 0.01f) {
+		// if (tilt > 0.01f) {
+		(void) tilt;
+		if ( Eulerf(Quatf(_v_att->q)).theta() < PITCH_TRANSITION_BACK ) {
 			_q_trans_sp = Quatf(AxisAnglef(_trans_rot_axis,
 						       time_since_trans_start * trans_pitch_rate)) * _q_trans_start;
 			// std::cout << "PX4 data:" << Eulerf(_q_trans_sp).phi() << " " << Eulerf(_q_trans_sp).theta() << " " << Eulerf(_q_trans_sp).psi() << std::endl;
@@ -351,6 +353,7 @@ void Tailsitter::update_transition_state()
 
 		}
 	}
+
 
 
 	/* ********************************************************************** */
